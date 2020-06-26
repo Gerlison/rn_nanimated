@@ -1,14 +1,14 @@
-import React, { useMemo, useRef } from 'react';
+import React from 'react';
 import { Dimensions, SafeAreaView } from 'react-native';
 import styled from 'styled-components/native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import useGetWheelSvg from '../hooks/useGetWheelSvg';
 
+import runSpring from '../utils/runSpring';
+
 const { width } = Dimensions.get('window');
-const wheelSize = width * 1.96;
 const numberOfSegments = 20;
-const fontSize = 18;
 const oneTurn = 360;
 const angleBySegment = oneTurn / numberOfSegments;
 const angleOffset = angleBySegment / 2;
@@ -20,12 +20,12 @@ const {
   block,
   cond,
   eq,
-  stopClock,
   set,
   add,
   or,
   interpolate,
   divide,
+  stopClock,
 } = Animated;
 
 const SpinningWheel = () => {
@@ -33,25 +33,10 @@ const SpinningWheel = () => {
   const state = new Value(State.UNDETERMINED);
   const translationY = new Value(0);
   const velocityY = new Value(0);
-  const position = new Value(angleOffset);
+  const position = new Value(0);
+  const offset = new Value(0);
 
   const [renderWheel, renderMarker] = useGetWheelSvg();
-
-  // const handlePan = ({ nativeEvent }: PanGestureHandlerStateChangeEvent) => {
-  //   const { velocityY, state, translationY } = nativeEvent;
-
-  //   if (state === State.ACTIVE) {
-  //     animAngle.setValue(translationY);
-  //   }
-
-  //   if (state === State.END) {
-  //     Animated.decay(animAngle, {
-  //       velocity: -velocityY / 10000,
-  //       deceleration: 0.999,
-  //       useNativeDriver: true,
-  //     }).start();
-  //   }
-  // };
 
   const handleEvent = event([
     {
@@ -68,9 +53,9 @@ const SpinningWheel = () => {
       or(eq(state, State.BEGAN), eq(state, State.ACTIVE)),
       [
         stopClock(clock),
-        set(position, add(position, divide(translationY, 100))),
+        set(offset, add(position, divide(translationY, -oneTurn))),
       ],
-      position,
+      set(position, runSpring(clock, position, offset)),
     ),
   ]);
 
@@ -89,7 +74,7 @@ const SpinningWheel = () => {
               left: width / 2,
               transform: [
                 {
-                  translateY: interpolate(currentRotation, {
+                  rotate: interpolate(currentRotation, {
                     inputRange: [-oneTurn, 0, oneTurn],
                     outputRange: [-oneTurn, 0, oneTurn],
                   }),

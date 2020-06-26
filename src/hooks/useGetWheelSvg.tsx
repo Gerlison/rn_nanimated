@@ -41,7 +41,7 @@ const useGetWheelSvg = () => {
         style={{
           position: 'absolute',
           top: '50%',
-          transform: [{ translateY: -wheelSize / 2 }],
+          transform: [{ translateY: -width }],
         }}
         width={wheelSize}
         height={wheelSize}>
