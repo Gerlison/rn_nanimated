@@ -34,7 +34,6 @@ const SpinningWheel = () => {
   const translationY = new Value(0);
   const velocityY = new Value(0);
   const position = new Value(angleOffset);
-  const offset = new Value(angleOffset);
 
   const [renderWheel, renderMarker] = useGetWheelSvg();
 
@@ -65,17 +64,23 @@ const SpinningWheel = () => {
   ]);
 
   const currentRotation = block([
-    cond(or(eq(state, State.BEGAN), eq(state, State.ACTIVE)), [
-      stopClock(clock),
-      set(offset, add(position, translationY)),
-    ]),
+    cond(
+      or(eq(state, State.BEGAN), eq(state, State.ACTIVE)),
+      [
+        stopClock(clock),
+        set(position, add(position, divide(translationY, 100))),
+      ],
+      position,
+    ),
   ]);
 
   return (
     <>
       <SafeAreaView style={{ backgroundColor: '#008b8b' }} />
       <StyledContainer>
-        <PanGestureHandler onHandlerStateChange={handleEvent}>
+        <PanGestureHandler
+          onGestureEvent={handleEvent}
+          onHandlerStateChange={handleEvent}>
           <Animated.View
             style={{
               flex: 1,

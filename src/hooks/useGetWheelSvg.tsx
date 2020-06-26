@@ -41,14 +41,17 @@ const useGetWheelSvg = () => {
         style={{
           position: 'absolute',
           top: '50%',
-          transform: [{ translateY: -width }],
+          transform: [{ translateY: -wheelSize / 2 }],
         }}
         width={wheelSize}
         height={wheelSize}>
         <Circle fill="#eee" r={width / 2} cx={width} cy={width} />
         <Polygon
-          points={`${width / 2 - 25},${width} ${width / 2 + 25},${width -
-            50} ${width / 2 + 25},${width + 50}`}
+          points={`
+            ${width / 2 - 25},${width}
+            ${width / 2 + 25},${width - 50}
+            ${width / 2 + 25},${width + 50}
+          `}
           fill="#eee"
         />
       </Svg>
