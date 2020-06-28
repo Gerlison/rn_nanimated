@@ -5,7 +5,7 @@ import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import useGetWheelSvg from '../hooks/useGetWheelSvg';
 
-import runSpring from '../utils/runSpring';
+// import runSpring from '../utils/runSpring';
 
 const { width } = Dimensions.get('window');
 const numberOfSegments = 20;
@@ -13,28 +13,13 @@ const oneTurn = 360;
 const angleBySegment = oneTurn / numberOfSegments;
 const angleOffset = angleBySegment / 2;
 
-const {
-  event,
-  Value,
-  Clock,
-  block,
-  cond,
-  eq,
-  set,
-  add,
-  or,
-  interpolate,
-  divide,
-  stopClock,
-} = Animated;
+const { event, Value, block, cond, eq, set, add, or, divide } = Animated;
 
 const SpinningWheel = () => {
-  const clock = new Clock();
   const state = new Value(State.UNDETERMINED);
   const translationY = new Value(0);
-  const velocityY = new Value(0);
-  const position = new Value(0);
-  const offset = new Value(0);
+  const rotation = new Value(0);
+  const rotationOffset = new Value(0);
 
   const [renderWheel, renderMarker] = useGetWheelSvg();
 
@@ -43,19 +28,15 @@ const SpinningWheel = () => {
       nativeEvent: {
         state,
         translationY,
-        velocityY,
       },
     },
   ]);
 
-  const currentRotation = block([
+  const rotate = block([
     cond(
       or(eq(state, State.BEGAN), eq(state, State.ACTIVE)),
-      [
-        stopClock(clock),
-        set(offset, add(position, divide(translationY, -oneTurn))),
-      ],
-      set(position, runSpring(clock, position, offset)),
+      set(rotation, add(rotationOffset, divide(translationY, -oneTurn))),
+      set(rotationOffset, rotation),
     ),
   ]);
 
@@ -71,17 +52,18 @@ const SpinningWheel = () => {
               flex: 1,
               justifyContent: 'center',
               alignItems: 'center',
-              left: width / 2,
-              transform: [
-                {
-                  rotate: interpolate(currentRotation, {
-                    inputRange: [-oneTurn, 0, oneTurn],
-                    outputRange: [-oneTurn, 0, oneTurn],
-                  }),
-                },
-              ],
             }}>
-            {renderWheel}
+            <Animated.View
+              style={{
+                left: width / 2,
+                transform: [
+                  {
+                    rotate,
+                  },
+                ],
+              }}>
+              {renderWheel}
+            </Animated.View>
           </Animated.View>
         </PanGestureHandler>
         {renderMarker}

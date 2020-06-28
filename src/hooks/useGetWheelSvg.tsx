@@ -6,7 +6,7 @@ import Svg, { Path, G, Text, Circle, Polygon } from 'react-native-svg';
 
 const { width } = Dimensions.get('window');
 const wheelSize = width * 1.96;
-const numberOfSegments = 20;
+const numberOfSegments = 4;
 const fontSize = 18;
 const oneTurn = 360;
 const angleBySegment = oneTurn / numberOfSegments;
@@ -65,9 +65,11 @@ const useGetWheelSvg = () => {
         width={wheelSize}
         height={wheelSize}
         viewBox={`0 0 ${width * 2} ${width * 2}`}
-        style={{
-          transform: [{ rotate: `-${angleOffset}deg` }],
-        }}>
+        style={
+          {
+            // transform: [{ rotate: `-${angleOffset}deg` }],
+          }
+        }>
         <G y={width} x={width}>
           {wheelPath.map((arc, i) => {
             const [x, y] = arc.centroid;
