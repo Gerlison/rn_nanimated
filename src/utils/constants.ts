@@ -3,7 +3,7 @@ const { width } = Dimensions.get('window');
 
 export const SPINNING_WHEEL = {
   wheelSize: width * 1.96,
-  numberOfSegments: 40,
+  numberOfSegments: 10,
   fontSize: 18,
   oneTurn: 360,
   translationDeceleration: -0.375,

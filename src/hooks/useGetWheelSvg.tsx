@@ -12,7 +12,6 @@ const {
   numberOfSegments,
   fontSize,
   oneTurn,
-  angleBySegment,
   angleOffset,
 } = SPINNING_WHEEL;
 
@@ -36,7 +35,18 @@ const makeWheel = () => {
   });
 };
 
-const useGetWheelSvg = () => {
+const useGetWheelSvg = (): [
+  JSX.Element,
+  JSX.Element,
+  (
+    number,
+  ) => {
+    path: any;
+    color: string;
+    value: number;
+    centroid: [number, number];
+  }
+] => {
   const wheelPaths = makeWheel();
 
   const renderMarker = useMemo(
