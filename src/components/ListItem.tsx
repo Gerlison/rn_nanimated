@@ -76,7 +76,10 @@ const ListItem = () => {
   return (
     <TapGestureHandler onHandlerStateChange={onGestureEvent}>
       <Animated.View
-        style={[styles.container, { transform: [{ scale: buttonScale }] }]}>
+        style={[
+          styles.container,
+          { transform: [{ scale: (buttonScale as unknown) as number }] },
+        ]}>
         <Text>teste</Text>
       </Animated.View>
     </TapGestureHandler>

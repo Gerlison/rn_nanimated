@@ -34,7 +34,7 @@ const {
 } = Animated;
 
 const SpinningWheel = () => {
-  const clock = new Clock();
+  const clock = useRef(new Clock()).current;
   const state = useRef(new Value(State.UNDETERMINED)).current;
   const translationY = useRef(new Value(0)).current;
   const rotationOffset = useRef(new Value(0)).current;

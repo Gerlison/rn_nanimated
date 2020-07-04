@@ -1,35 +1,38 @@
 import React from 'react';
-import { StyleSheet, View, Dimensions, Text, FlatList } from 'react-native';
+import { StyleSheet, View, Text, FlatList } from 'react-native';
 import Animated from 'react-native-reanimated';
 const { interpolate } = Animated;
 
-const { width: windowWidth } = Dimensions.get('window');
-
 interface Props {
-  animX: Animated.Value<number>;
-  animScale: Animated.Value<number>;
+  animX: Animated.Node<number>;
+  animScale: Animated.Node<number>;
 }
 
-const Card = ({ animX, animScale }) => {
+const Card = ({ animX, animScale }: Props) => {
   return (
     <Animated.View
       style={[
         styles.container,
-        { transform: [{ scale: animScale }, { translateX: animX }] },
+        {
+          transform: [
+            { scale: (animScale as unknown) as number },
+            { translateX: (animX as unknown) as number },
+          ],
+        },
       ]}>
       <Animated.View
         style={{
           flex: 1,
-          opacity: interpolate(animScale, {
+          opacity: (interpolate(animScale, {
             inputRange: [0.8, 1],
             outputRange: [0, 1],
-          }),
+          }) as unknown) as number,
           transform: [
             {
-              translateY: interpolate(animX, {
+              translateY: (interpolate(animX, {
                 inputRange: [0, 500],
                 outputRange: [0, 50],
-              }),
+              }) as unknown) as number,
             },
           ],
         }}>
@@ -56,7 +59,7 @@ const Card = ({ animX, animScale }) => {
 
 const styles = StyleSheet.create({
   container: {
-    ...StyleSheet.absoluteFill,
+    ...(StyleSheet.absoluteFill as object),
     backgroundColor: 'black',
   },
   title: {
