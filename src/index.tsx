@@ -5,14 +5,11 @@ import SideCardAnimation from './screens/SideCardAnimation';
 import SpinningWheel from './screens/SpinningWheel';
 
 const App = () => (
-  <>
-    {/* <SafeAreaView /> */}
-    <View style={{ flex: 1 }}>
-      {/* <SideCardAnimation /> */}
-      {/* <ClickAnimations /> */}
-      <SpinningWheel />
-    </View>
-  </>
+  <View style={{ flex: 1 }}>
+    {/* <SideCardAnimation /> */}
+    {/* <ClickAnimations /> */}
+    <SpinningWheel />
+  </View>
 );
 
 export default App;

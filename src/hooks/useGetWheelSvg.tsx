@@ -4,13 +4,16 @@ import { Dimensions } from 'react-native';
 import * as d3Shape from 'd3-shape';
 import Svg, { Path, G, Text, Circle, Polygon } from 'react-native-svg';
 
+import { SPINNING_WHEEL } from '../utils/constants';
+
 const { width } = Dimensions.get('window');
-const wheelSize = width * 1.96;
-const numberOfSegments = 20;
-const fontSize = 18;
-const oneTurn = 360;
-const angleBySegment = oneTurn / numberOfSegments;
-const angleOffset = angleBySegment / 2;
+const {
+  wheelSize,
+  numberOfSegments,
+  fontSize,
+  oneTurn,
+  angleOffset,
+} = SPINNING_WHEEL;
 
 const makeWheel = () => {
   const data: number[] = new Array(numberOfSegments).fill(1);
@@ -26,14 +29,25 @@ const makeWheel = () => {
     return {
       path: instance(arc),
       color: '#333',
-      value: Math.round(Math.random() * 10 + 1) * 200, //[200, 2200]
+      value: _index,
       centroid: instance.centroid(arc),
     };
   });
 };
 
-const useGetWheelSvg = () => {
-  const wheelPath = makeWheel();
+const useGetWheelSvg = (): [
+  JSX.Element,
+  JSX.Element,
+  (
+    number,
+  ) => {
+    path: any;
+    color: string;
+    value: number;
+    centroid: [number, number];
+  }
+] => {
+  const wheelPaths = makeWheel();
 
   const renderMarker = useMemo(
     () => (
@@ -66,10 +80,10 @@ const useGetWheelSvg = () => {
         height={wheelSize}
         viewBox={`0 0 ${width * 2} ${width * 2}`}
         style={{
-          transform: [{ rotate: `-${angleOffset}deg` }],
+          transform: [{ rotate: `${-(90 + angleOffset)}deg` }],
         }}>
         <G y={width} x={width}>
-          {wheelPath.map((arc, i) => {
+          {wheelPaths.map((arc, i) => {
             const [x, y] = arc.centroid;
             const number = arc.value.toString();
 
@@ -99,7 +113,18 @@ const useGetWheelSvg = () => {
     [],
   );
 
-  return [renderWheel, renderMarker];
+  const getSelectedItem = (
+    index: number,
+  ): {
+    path: any;
+    color: string;
+    value: number;
+    centroid: [number, number];
+  } => {
+    return wheelPaths[index];
+  };
+
+  return [renderWheel, renderMarker, getSelectedItem];
 };
 
 export default useGetWheelSvg;

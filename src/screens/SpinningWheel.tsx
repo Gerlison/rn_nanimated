@@ -1,90 +1,137 @@
-import React from 'react';
-import { Dimensions, SafeAreaView } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { Dimensions } from 'react-native';
 import styled from 'styled-components/native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import useGetWheelSvg from '../hooks/useGetWheelSvg';
 
 import runSpring from '../utils/runSpring';
+import { SPINNING_WHEEL } from '../utils/constants';
 
 const { width } = Dimensions.get('window');
-const numberOfSegments = 20;
-const oneTurn = 360;
-const angleBySegment = oneTurn / numberOfSegments;
-const angleOffset = angleBySegment / 2;
+const {
+  oneTurn,
+  angleBySegment,
+  translationDeceleration,
+  angleOffset,
+} = SPINNING_WHEEL;
 
 const {
   event,
   Value,
-  Clock,
-  block,
   cond,
   eq,
   set,
   add,
   or,
-  interpolate,
-  divide,
+  multiply,
+  concat,
+  useCode,
+  Clock,
+  call,
   stopClock,
+  and,
 } = Animated;
 
 const SpinningWheel = () => {
-  const clock = new Clock();
-  const state = new Value(State.UNDETERMINED);
-  const translationY = new Value(0);
-  const velocityY = new Value(0);
-  const position = new Value(0);
-  const offset = new Value(0);
+  const clock = useRef(new Clock()).current;
+  const state = useRef(new Value(State.UNDETERMINED)).current;
+  const translationY = useRef(new Value(0)).current;
+  const rotationOffset = useRef(new Value(0)).current;
+  const snapOffset = useRef(new Value(0)).current;
+  const rotate = useRef(new Value(0)).current;
+  const canUpdateIndex = useRef(new Value(0)).current;
 
-  const [renderWheel, renderMarker] = useGetWheelSvg();
+  const [renderWheel, renderMarker, getSelectedItem] = useGetWheelSvg();
+
+  const [item, setItem] = useState(getSelectedItem(0));
 
   const handleEvent = event([
     {
       nativeEvent: {
         state,
         translationY,
-        velocityY,
       },
     },
   ]);
 
-  const currentRotation = block([
-    cond(
-      or(eq(state, State.BEGAN), eq(state, State.ACTIVE)),
-      [
-        stopClock(clock),
-        set(offset, add(position, divide(translationY, -oneTurn))),
-      ],
-      set(position, runSpring(clock, position, offset)),
-    ),
-  ]);
+  const getIndex = ([rotationNumber]) => {
+    const newOffset = (Math.round(rotationNumber / angleBySegment) *
+      angleBySegment) as Animated.Adaptable<0>;
+
+    snapOffset.setValue(newOffset);
+    canUpdateIndex.setValue(0);
+
+    const currentRotatedAngle = Math.abs(
+      rotationNumber < 0
+        ? Math.round(rotationNumber % oneTurn)
+        : Math.abs(Math.round(rotationNumber % oneTurn)) - oneTurn,
+    );
+
+    let index = Math.floor(
+      (currentRotatedAngle + angleOffset) / angleBySegment,
+    );
+
+    // Condiders last offset as part of the first item
+    if (currentRotatedAngle >= oneTurn - angleOffset) {
+      index = 0;
+    }
+
+    setItem(getSelectedItem(index));
+  };
+
+  useCode(
+    () =>
+      set(
+        rotate,
+        cond(
+          or(eq(state, State.BEGAN), eq(state, State.ACTIVE)),
+          [
+            stopClock(clock),
+            set(canUpdateIndex, 1),
+            add(
+              rotationOffset,
+              multiply(translationY, translationDeceleration),
+            ),
+          ],
+          set(rotationOffset, runSpring(clock, rotate, snapOffset)),
+        ),
+      ),
+    [],
+  );
+
+  useCode(
+    () =>
+      cond(
+        and(eq(state, State.END), eq(canUpdateIndex, 1)),
+        call([rotate], getIndex),
+      ),
+    [],
+  );
 
   return (
     <>
-      <SafeAreaView style={{ backgroundColor: '#008b8b' }} />
+      <StyledSafeArea />
       <StyledContainer>
         <PanGestureHandler
           onGestureEvent={handleEvent}
           onHandlerStateChange={handleEvent}>
-          <Animated.View
-            style={{
-              flex: 1,
-              justifyContent: 'center',
-              alignItems: 'center',
-              left: width / 2,
-              transform: [
-                {
-                  rotate: interpolate(currentRotation, {
-                    inputRange: [-oneTurn, 0, oneTurn],
-                    outputRange: [-oneTurn, 0, oneTurn],
-                  }),
-                },
-              ],
-            }}>
-            {renderWheel}
-          </Animated.View>
+          <StyledGestureContainer>
+            <Animated.View
+              style={{
+                left: width / 2,
+                transform: [
+                  {
+                    rotate: (concat(rotate, 'deg') as unknown) as string,
+                  },
+                ],
+              }}>
+              {renderWheel}
+            </Animated.View>
+          </StyledGestureContainer>
         </PanGestureHandler>
         {renderMarker}
+        <StyledText>Value: {item.value}</StyledText>
       </StyledContainer>
     </>
   );
@@ -93,6 +140,24 @@ const SpinningWheel = () => {
 const StyledContainer = styled.View`
   flex: 1;
   background-color: #008b8b;
+`;
+
+const StyledSafeArea = styled.SafeAreaView`
+  background-color: #008b8b;
+`;
+
+const StyledGestureContainer = styled(Animated.View)`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+`;
+
+const StyledText = styled.Text`
+  position: absolute;
+  bottom: 50px;
+  left: 50px;
+  color: white;
+  font-size: 22px;
 `;
 
 export default SpinningWheel;

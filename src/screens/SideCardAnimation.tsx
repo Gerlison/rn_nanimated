@@ -11,12 +11,13 @@ import Animated from 'react-native-reanimated';
 import { State, PanGestureHandler } from 'react-native-gesture-handler';
 
 import Card from '../components/Card';
+
+import runSpring from '../utils/runSpring';
+
 const {
   Value,
   Clock,
-  startClock,
   stopClock,
-  clockRunning,
   event,
   cond,
   eq,
@@ -24,7 +25,6 @@ const {
   add,
   interpolate,
   Extrapolate,
-  spring,
   block,
   greaterThan,
   or,
@@ -32,42 +32,6 @@ const {
 
 const { width: windowWidth } = Dimensions.get('window');
 const CARD_INITIAL_POSITION = windowWidth + 30;
-
-function runSring(
-  clock: Animated.Clock,
-  value: Animated.Value<number>,
-  dest: Animated.Node<number>,
-) {
-  const state = {
-    finished: new Value(0),
-    position: new Value(0),
-    time: new Value(0),
-    velocity: new Value(0),
-  };
-
-  const config = {
-    damping: 800,
-    mass: 1,
-    stiffness: 500,
-    overshootClamping: true,
-    restSpeedThreshold: 0.01,
-    restDisplacementThreshold: 0.01,
-    toValue: new Value(0),
-  };
-
-  return block([
-    cond(clockRunning(clock), set(config.toValue, dest), [
-      set(state.finished, 0),
-      set(state.time, 0),
-      set(state.position, value),
-      set(config.toValue, dest),
-      startClock(clock),
-    ]),
-    spring(clock, state, config),
-    cond(state.finished, stopClock(clock)),
-    state.position,
-  ]);
-}
 
 const SideCardAnimation = () => {
   const clock = new Clock();
@@ -89,7 +53,7 @@ const SideCardAnimation = () => {
     cond(
       or(eq(state, State.BEGAN), eq(state, State.ACTIVE)),
       [stopClock(clock), set(offset, add(position, translationX))],
-      [set(position, runSring(clock, offset, snapPoint))],
+      [set(position, runSpring(clock, offset, snapPoint))],
     ),
   ]);
 
